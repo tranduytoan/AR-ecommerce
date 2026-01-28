@@ -47,6 +47,7 @@ export function useARControls(productGlassesList: Product[], productHatList: Pro
     const arProduct = createARProduct(productGlassesList[index]);
     arEngineIRef.current.setProduct(arProduct);
     setSelectedGlassProductI(index);
+    setSelectedHatProductI(null);
     arProductGlassSelectedI.current = arProduct;
     if (!arEnabledI) setArEnabledI(true);
   }, [productGlassesList, createARProduct, arEnabledI]);
@@ -57,6 +58,7 @@ export function useARControls(productGlassesList: Product[], productHatList: Pro
     const arProduct = createARProduct(productGlassesList[index]);
     arEngineIIRef.current.setProduct(arProduct);
     setSelectedGlassProductII(index);
+    setSelectedHatProductII(null);
     arProductGlassSelectedII.current = arProduct;
     if (!arEnabledII) setArEnabledII(true);
   }, [productGlassesList, createARProduct, arEnabledII]);
@@ -67,6 +69,7 @@ export function useARControls(productGlassesList: Product[], productHatList: Pro
     const arProduct = createARProduct(productHatList[index]);
     arEngineIRef.current.setProduct(arProduct);
     setSelectedHatProductI(index);
+    setSelectedGlassProductI(null);
     arProductHatSelectedI.current = arProduct;
     if (!arEnabledI) setArEnabledI(true);
   }, [productHatList, createARProduct, arEnabledI]);
@@ -77,6 +80,7 @@ export function useARControls(productGlassesList: Product[], productHatList: Pro
     const arProduct = createARProduct(productHatList[index]);
     arEngineIIRef.current.setProduct(arProduct);
     setSelectedHatProductII(index);
+    setSelectedGlassProductII(null);
     arProductHatSelectedII.current = arProduct;
     if (!arEnabledII) setArEnabledII(true);
   }, [productHatList, createARProduct, arEnabledII]);
@@ -127,27 +131,31 @@ export function useARControls(productGlassesList: Product[], productHatList: Pro
       if (!arEnabledI) return;
       if (arEngineIRef.current.state.isDetecting) return;
 
-      const maxAttempts = 30;
+      const maxAttempts = 60;
       let attempts = 0;
 
       while (!cancelled && attempts < maxAttempts) {
         const canvas = canvasRefI.current;
         const videos = document.querySelectorAll('video');
-        const video = videos[0];
+        const video = videos[0] as HTMLVideoElement | undefined;
 
         if (video && canvas instanceof HTMLCanvasElement) {
-          try {
-            canvas.width = video.videoWidth || video.clientWidth;
-            canvas.height = video.videoHeight || video.clientHeight;
-            await arEngineIRef.current.start(video as HTMLVideoElement, canvas);
-          } catch (err) {
-            console.error('Failed to start AR engine I:', err);
+          const hasValidDimensions = video.videoWidth > 0 && video.videoHeight > 0;
+          
+          if (hasValidDimensions) {
+            try {
+              canvas.width = video.videoWidth;
+              canvas.height = video.videoHeight;
+              await arEngineIRef.current.start(video, canvas);
+            } catch (err) {
+              console.error('Failed to start AR engine I:', err);
+            }
+            return;
           }
-          return;
         }
 
         attempts++;
-        await new Promise((res) => requestAnimationFrame(res));
+        await new Promise((res) => setTimeout(res, 50));
       }
 
       if (!cancelled) {
@@ -169,27 +177,31 @@ export function useARControls(productGlassesList: Product[], productHatList: Pro
       if (!arEnabledII) return;
       if (arEngineIIRef.current.state.isDetecting) return;
 
-      const maxAttempts = 30;
+      const maxAttempts = 60;
       let attempts = 0;
 
       while (!cancelled && attempts < maxAttempts) {
         const canvas = canvasRefII.current;
         const videos = document.querySelectorAll('video');
-        const video = videos[1];
+        const video = videos[1] as HTMLVideoElement | undefined;
 
         if (video && canvas instanceof HTMLCanvasElement) {
-          try {
-            canvas.width = video.videoWidth || video.clientWidth;
-            canvas.height = video.videoHeight || video.clientHeight;
-            await arEngineIIRef.current.start(video as HTMLVideoElement, canvas);
-          } catch (err) {
-            console.error('Failed to start AR engine II:', err);
+          const hasValidDimensions = video.videoWidth > 0 && video.videoHeight > 0;
+          
+          if (hasValidDimensions) {
+            try {
+              canvas.width = video.videoWidth;
+              canvas.height = video.videoHeight;
+              await arEngineIIRef.current.start(video, canvas);
+            } catch (err) {
+              console.error('Failed to start AR engine II:', err);
+            }
+            return;
           }
-          return;
         }
 
         attempts++;
-        await new Promise((res) => requestAnimationFrame(res));
+        await new Promise((res) => setTimeout(res, 50));
       }
 
       if (!cancelled) {

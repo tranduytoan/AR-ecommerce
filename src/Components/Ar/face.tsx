@@ -6,6 +6,13 @@ import '@tensorflow/tfjs-converter';
 import '@tensorflow/tfjs-backend-webgl';
 
 import { preloadARModel } from '@/hooks/useAREngine';
+import { getSlugByModelName, getProductUrl } from '@/lib/ar/arProductMapping';
+
+export interface ARTryOnPageProps {
+  initialSlug?: string | null;
+  initialModelName?: string | null;
+  initialProductType?: 'hat' | 'glasses' | null;
+}
 import { useCameraManager } from './hooks/useCameraManager';
 import { useProductManager } from './hooks/useProductManager';
 import { useARControls } from './hooks/useARControls';
@@ -26,9 +33,15 @@ const DEFAULT_MODEL_SETTINGS: ARModelSettings = {
   color: "#aabbcc",
 };
 
-export default function Page() {
+export default function ARTryOnPage({
+  initialSlug = null,
+  initialModelName = null,
+  initialProductType = null,
+}: ARTryOnPageProps = {}) {
   const router = useRouter();
   const arContainerRef = useRef<HTMLDivElement | null>(null);
+  const [currentModelName, setCurrentModelName] = useState<string | null>(initialModelName);
+  const initialSelectionApplied = useRef(false);
 
   const [cameraIIEnabled, setCameraIIEnabled] = useState(false);
   const [swapLayout, setSwapLayout] = useState(false);
@@ -169,6 +182,9 @@ export default function Page() {
     resetSettingsI();
     handleSelectedGlassProductI(index);
     setLastSelectedTypeI('glasses');
+    if (productGlassesList[index]) {
+      setCurrentModelName(productGlassesList[index].name);
+    }
   };
 
   const onSelectGlassProductII = (index: number) => {
@@ -180,6 +196,9 @@ export default function Page() {
     resetSettingsI();
     handleSelectedHatProductI(index);
     setLastSelectedTypeI('hat');
+    if (productHatList[index]) {
+      setCurrentModelName(productHatList[index].name);
+    }
   };
 
   const onSelectHatProductII = (index: number) => {
@@ -225,9 +244,37 @@ export default function Page() {
     setCapturedImage(null);
   }, []);
 
+  const currentSlug = currentModelName ? getSlugByModelName(currentModelName) : null;
+
+  const handleBuyProduct = useCallback(() => {
+    if (currentSlug) {
+      router.push(getProductUrl(currentSlug));
+      stopStreams();
+    }
+  }, [currentSlug, router, stopStreams]);
+
   useEffect(() => {
     preloadARModel().catch(console.error);
   }, []);
+
+  useEffect(() => {
+    if (initialSelectionApplied.current) return;
+    if (!initialModelName || !initialProductType) return;
+    if (!camerasReady) return;
+    
+    const productList = initialProductType === 'glasses' ? productGlassesList : productHatList;
+    if (productList.length === 0) return;
+    
+    const productIndex = productList.findIndex(p => p.name === initialModelName);
+    if (productIndex !== -1) {
+      initialSelectionApplied.current = true;
+      if (initialProductType === 'glasses') {
+        onSelectGlassProductI(productIndex);
+      } else {
+        onSelectHatProductI(productIndex);
+      }
+    }
+  }, [camerasReady, productGlassesList, productHatList, initialModelName, initialProductType]);
 
   useEffect(() => {
     return () => {
@@ -325,6 +372,8 @@ export default function Page() {
           onCapture={handleCapture}
           slidersOpen={slidersOpen}
           cameraIIEnabled={cameraIIEnabled}
+          currentSlug={currentSlug}
+          onBuyProduct={handleBuyProduct}
         />
 
         <ARSettingsSliders

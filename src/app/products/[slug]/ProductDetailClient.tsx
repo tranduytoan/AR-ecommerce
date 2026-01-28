@@ -13,9 +13,10 @@ interface ProductDetailClientProps {
     product: IProduct;
     relatedProducts: IProduct[];
     discountPercentage: number;
+    slug: string;
 }
 
-export default function ProductDetailClient({ product, relatedProducts, discountPercentage }: ProductDetailClientProps) {
+export default function ProductDetailClient({ product, relatedProducts, discountPercentage, slug }: ProductDetailClientProps) {
     return (
         <div>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -35,6 +36,7 @@ export default function ProductDetailClient({ product, relatedProducts, discount
                     <Suspense fallback={<div className="h-80 flex items-center justify-center">Đang tải thông tin...</div>}>
                         <ProductInfo
                             productId={product._id as string}
+                            slug={slug}
                             name={product.name}
                             price={product.price}
                             salePrice={product.salePrice}

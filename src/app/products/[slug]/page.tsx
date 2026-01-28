@@ -91,6 +91,7 @@ export default async function ProductDetailPage({
           product={product}
           relatedProducts={relatedProducts}
           discountPercentage={discountPercentage}
+          slug={slug}
         />
       </div>
     </div>

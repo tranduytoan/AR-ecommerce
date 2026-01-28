@@ -5,7 +5,8 @@ import {
   FlipHorizontal, 
   Settings2,
   Layers2,
-  Camera
+  Camera,
+  ShoppingCart
 } from 'lucide-react';
 
 interface ControlPanelProps {
@@ -16,6 +17,8 @@ interface ControlPanelProps {
   onCapture: () => void;
   slidersOpen: boolean;
   cameraIIEnabled: boolean;
+  currentSlug?: string | null;
+  onBuyProduct?: () => void;
 }
 
 export function ControlPanel({
@@ -26,6 +29,8 @@ export function ControlPanel({
   onCapture,
   slidersOpen,
   cameraIIEnabled,
+  currentSlug,
+  onBuyProduct,
 }: ControlPanelProps) {
   return (
     <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-4 bg-black/70 backdrop-blur-xl px-6 py-4 rounded-full shadow-2xl z-10 no-dismiss">
@@ -37,6 +42,17 @@ export function ControlPanel({
         <ArrowLeft className="size-4" />
         <span>Exit</span>
       </Button>
+
+      {currentSlug && onBuyProduct && (
+        <Button
+          onClick={onBuyProduct}
+          title="Buy Product"
+          className="h-10 px-4 rounded-full transition z-20 bg-green-600 hover:bg-green-700 text-white text-sm font-medium flex items-center gap-2"
+        >
+          <ShoppingCart className="size-4" />
+          <span>Buy</span>
+        </Button>
+      )}
       
       <Button
         onClick={onSwapLayout}

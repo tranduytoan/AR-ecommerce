@@ -12,7 +12,7 @@ import SafeImage from "@/Components/SafeImage";
 import StarRating from "@/Components/products/StarRating";
 import { useCompareStore } from "@/store/useCompareStore";
 import { getImageUrl } from '@/lib/getImageUrl';
-import {  ShoppingCart, Scale, RectangleGoggles } from "lucide-react";
+import { ShoppingCart, Scale } from "lucide-react";
 
 interface ProductCardProps {
   product: Product;
@@ -85,15 +85,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
     }
   };
 
-  const handleARClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (product._id) {
-      router.push(`/products/ar/${product._id}`);
-    } else {
-      toast.error("Sản phẩm không hỗ trợ trải nghiệm AR.");
-    }
-  }
-
   return (
     <div
       className={`bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-2xl hover:-translate-y-1 hover:scale-[1.035] hover:border-2 hover:border-green-700 dark:hover:border-green-600 border border-transparent transition-all duration-300 overflow-hidden flex flex-col h-full min-h-[400px] cursor-pointer ${isProductInCompare ? "ring-2 ring-green-600/50" : ""}`}
@@ -142,17 +133,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
         <div className="flex gap-2 mt-auto pt-2">
           <Button onClick={(e) => { e.stopPropagation(); handleBuyNow(e); }} className="flex-1 bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-md text-sm font-medium transition-all duration-200 h-9 shadow-sm hover:shadow-lg hover:scale-105 active:scale-95 focus:ring-2 focus:ring-gray-400" disabled={isPending} style={{ willChange: 'transform, box-shadow' }}>
             <ShoppingCart className="w-3 h-3 mr-1" /> MUA HÀNG
-          </Button>
-
-          {/* AR button */}
-          <Button
-            size="icon"
-            variant="outline"
-            onClick={(e) => { e.stopPropagation(); handleARClick(e); }}
-            title="Trải nghiệm AR"
-            className="w-10 h-9 flex items-center justify-center rounded-md"
-          >
-            <RectangleGoggles className="w-4 h-4" />
           </Button>
           {/* Wishlist button */}
           <FavoriteButton isFavorite={isFavorite} onClick={handleFavoriteClick} title={isFavorite ? 'Bỏ khỏi yêu thích' : 'Thêm vào yêu thích'} />

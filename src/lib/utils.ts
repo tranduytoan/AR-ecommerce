@@ -9,10 +9,12 @@ export function cn(...inputs: ClassValue[]) {
 export function getValidImageUrl(imageUrl: string): string {
   if (!imageUrl) return "";
 
-  // Remove public prefix if it exists (both "/public" and "public")
+  if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+    return imageUrl;
+  }
+
   let cleanUrl = imageUrl.replace(/^\/public\//, "/").replace(/^public\//, "/");
 
-  // Ensure the URL starts with /
   if (!cleanUrl.startsWith("/")) {
     cleanUrl = "/" + cleanUrl;
   }

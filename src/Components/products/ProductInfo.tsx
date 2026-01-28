@@ -11,6 +11,7 @@ import { addItemToCart, buyNowAndRedirect } from "@/lib/actions/cart";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { formatCurrency } from "@/lib/utils";
+import { isARSupportedSlug, getARTryOnUrl } from "@/lib/ar/arProductMapping";
 
 interface ProductAttribute {
   brand?: string;
@@ -36,6 +37,7 @@ interface ProductRating {
 
 interface ProductInfoProps {
   productId: string;
+  slug: string;
   name: string;
   price: number;
   salePrice?: number;
@@ -50,6 +52,7 @@ interface ProductInfoProps {
 
 const ProductInfo: React.FC<ProductInfoProps> = ({
   productId,
+  slug,
   name,
   price,
   salePrice,
@@ -127,8 +130,9 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
 
   const handleARClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (productId) {
-      router.push(`/products/ar/${productId}`);
+    const arUrl = getARTryOnUrl(slug);
+    if (arUrl) {
+      router.push(arUrl);
     } else {
       toast.error("Sản phẩm không hỗ trợ trải nghiệm AR.");
     }
@@ -291,15 +295,17 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
             Thêm vào giỏ
           </Button>
           <FavoriteButton isFavorite={isFavorite} onClick={handleFavoriteClick} title={isFavorite ? 'Bỏ khỏi yêu thích' : 'Thêm vào yêu thích'} />
-          <Button
-            size="icon"
-            variant="outline"
-            onClick={(e) => { e.stopPropagation(); handleARClick(e); }}
-            title="Trải nghiệm AR"
-            className="w-10 h-9 flex items-center justify-center rounded-md"
-          >
-            <RectangleGoggles className="w-4 h-4" />
-          </Button>
+          {isARSupportedSlug(slug) && (
+            <Button
+              size="icon"
+              variant="outline"
+              onClick={(e) => { e.stopPropagation(); handleARClick(e); }}
+              title="Trải nghiệm AR"
+              className="w-10 h-9 flex items-center justify-center rounded-md"
+            >
+              <RectangleGoggles className="w-4 h-4" />
+            </Button>
+          )}
 
           <Button variant="outline" size="icon">
             <Share2 className="w-4 h-4" />
