@@ -21,11 +21,6 @@ export function useARControls(productGlassesList: Product[], productHatList: Pro
   const [selectedHatProductI, setSelectedHatProductI] = useState<number | null>(null);
   const [selectedHatProductII, setSelectedHatProductII] = useState<number | null>(null);
 
-  const arProductGlassSelectedI = useRef<ARProduct | null>(null);
-  const arProductGlassSelectedII = useRef<ARProduct | null>(null);
-  const arProductHatSelectedI = useRef<ARProduct | null>(null);
-  const arProductHatSelectedII = useRef<ARProduct | null>(null);
-
   const canvasRefI = useRef<HTMLCanvasElement | null>(null);
   const canvasRefII = useRef<HTMLCanvasElement | null>(null);
 
@@ -44,74 +39,92 @@ export function useARControls(productGlassesList: Product[], productHatList: Pro
   const handleSelectedGlassProductI = useCallback((index: number) => {
     if (index < 0 || index >= productGlassesList.length) return;
     
+    if (selectedGlassProductI === index) {
+      arEngineIRef.current.clearProduct('glasses');
+      setSelectedGlassProductI(null);
+      return;
+    }
+    
     const arProduct = createARProduct(productGlassesList[index]);
     arEngineIRef.current.setProduct(arProduct);
     setSelectedGlassProductI(index);
-    arProductGlassSelectedI.current = arProduct;
     if (!arEnabledI) setArEnabledI(true);
-  }, [productGlassesList, createARProduct, arEnabledI]);
+  }, [productGlassesList, createARProduct, arEnabledI, selectedGlassProductI]);
 
   const handleSelectedGlassProductII = useCallback((index: number) => {
     if (index < 0 || index >= productGlassesList.length) return;
     
+    if (selectedGlassProductII === index) {
+      arEngineIIRef.current.clearProduct('glasses');
+      setSelectedGlassProductII(null);
+      return;
+    }
+    
     const arProduct = createARProduct(productGlassesList[index]);
     arEngineIIRef.current.setProduct(arProduct);
     setSelectedGlassProductII(index);
-    arProductGlassSelectedII.current = arProduct;
     if (!arEnabledII) setArEnabledII(true);
-  }, [productGlassesList, createARProduct, arEnabledII]);
+  }, [productGlassesList, createARProduct, arEnabledII, selectedGlassProductII]);
 
   const handleSelectedHatProductI = useCallback((index: number) => {
     if (index < 0 || index >= productHatList.length) return;
     
+    if (selectedHatProductI === index) {
+      arEngineIRef.current.clearProduct('hat');
+      setSelectedHatProductI(null);
+      return;
+    }
+    
     const arProduct = createARProduct(productHatList[index]);
     arEngineIRef.current.setProduct(arProduct);
     setSelectedHatProductI(index);
-    arProductHatSelectedI.current = arProduct;
     if (!arEnabledI) setArEnabledI(true);
-  }, [productHatList, createARProduct, arEnabledI]);
+  }, [productHatList, createARProduct, arEnabledI, selectedHatProductI]);
 
   const handleSelectedHatProductII = useCallback((index: number) => {
     if (index < 0 || index >= productHatList.length) return;
     
+    if (selectedHatProductII === index) {
+      arEngineIIRef.current.clearProduct('hat');
+      setSelectedHatProductII(null);
+      return;
+    }
+    
     const arProduct = createARProduct(productHatList[index]);
     arEngineIIRef.current.setProduct(arProduct);
     setSelectedHatProductII(index);
-    arProductHatSelectedII.current = arProduct;
     if (!arEnabledII) setArEnabledII(true);
-  }, [productHatList, createARProduct, arEnabledII]);
+  }, [productHatList, createARProduct, arEnabledII, selectedHatProductII]);
 
   const toggleARI = useCallback(() => {
     if (arEnabledI) {
       arEngineIRef.current.stop();
+      arEngineIRef.current.clearAllProducts();
       setArEnabledI(false);
       setSelectedGlassProductI(null);
       setSelectedHatProductI(null);
     } else {
       setArEnabledI(true);
-      if (productGlassesList.length > 0) {
-        handleSelectedGlassProductI(0);
-      }
     }
-  }, [arEnabledI, productGlassesList.length, handleSelectedGlassProductI]);
+  }, [arEnabledI]);
 
   const toggleARII = useCallback(() => {
     if (arEnabledII) {
       arEngineIIRef.current.stop();
+      arEngineIIRef.current.clearAllProducts();
       setArEnabledII(false);
       setSelectedGlassProductII(null);
       setSelectedHatProductII(null);
     } else {
       setArEnabledII(true);
-      if (productGlassesList.length > 0) {
-        handleSelectedGlassProductII(0);
-      }
     }
-  }, [arEnabledII, productGlassesList.length, handleSelectedGlassProductII]);
+  }, [arEnabledII]);
 
   const resetAR = useCallback(() => {
     arEngineIRef.current.stop();
     arEngineIIRef.current.stop();
+    arEngineIRef.current.clearAllProducts();
+    arEngineIIRef.current.clearAllProducts();
     setArEnabledI(false);
     setArEnabledII(false);
     setSelectedGlassProductI(null);

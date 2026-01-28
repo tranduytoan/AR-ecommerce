@@ -3,17 +3,28 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { DetectorManager } from '@/lib/ar/core/DetectorSingleton';
 import type { FaceLandmarkDetector } from '@/lib/ar/core/FaceLandmarkDetector';
-import { createRenderer } from '@/lib/ar/ProductRegistry';
+import { MultiProductRenderer } from '@/lib/ar/renderers/MultiProductRenderer';
 import type {
   AREngineState,
   ARSettings,
   ARProduct,
   FaceLandmarks,
-  UseAREngineReturn,
-  IARRenderer,
   AREngineConfig,
+  ARObjectType,
 } from '@/lib/ar/types';
 import { DEFAULT_AR_SETTINGS } from '@/lib/ar/types';
+
+export interface UseAREngineReturn {
+  state: AREngineState;
+  start: (video: HTMLVideoElement, canvas: HTMLCanvasElement) => Promise<void>;
+  stop: () => void;
+  setProduct: (product: ARProduct) => Promise<void>;
+  clearProduct: (type: ARObjectType) => void;
+  clearAllProducts: () => void;
+  hasProduct: (type: ARObjectType) => boolean;
+  setSettings: (settings: Partial<ARSettings>) => void;
+  landmarks: FaceLandmarks | null;
+}
 
 export async function preloadARModel(config?: Partial<AREngineConfig>): Promise<void> {
   return DetectorManager.preload(config);
@@ -37,9 +48,8 @@ export function useAREngine(config?: Partial<AREngineConfig>): UseAREngineReturn
   const [landmarks, setLandmarks] = useState<FaceLandmarks | null>(null);
 
   const detectorRef = useRef<FaceLandmarkDetector | null>(null);
-  const rendererRef = useRef<IARRenderer | null>(null);
+  const rendererRef = useRef<MultiProductRenderer | null>(null);
   const settingsRef = useRef<ARSettings>(DEFAULT_AR_SETTINGS);
-  const productRef = useRef<ARProduct | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const animationFrameRef = useRef<number | null>(null);
@@ -63,7 +73,7 @@ export function useAREngine(config?: Partial<AREngineConfig>): UseAREngineReturn
         setLandmarks(detected);
         updateState({ faceDetected: true });
 
-        if (rendererRef.current && productRef.current) {
+        if (rendererRef.current) {
           rendererRef.current.render(detected, settingsRef.current, {
             width: videoRef.current.videoWidth,
             height: videoRef.current.videoHeight,
@@ -103,13 +113,9 @@ export function useAREngine(config?: Partial<AREngineConfig>): UseAREngineReturn
 
         updateState({ isModelLoaded: true });
 
-        if (productRef.current) {
-          if (rendererRef.current) {
-            rendererRef.current.dispose();
-          }
-          rendererRef.current = createRenderer(productRef.current);
+        if (!rendererRef.current) {
+          rendererRef.current = new MultiProductRenderer();
           rendererRef.current.init(canvas);
-          await rendererRef.current.setProduct(productRef.current);
         }
 
         updateState({ isLoading: false, isDetecting: true });
@@ -140,27 +146,9 @@ export function useAREngine(config?: Partial<AREngineConfig>): UseAREngineReturn
   }, [updateState]);
 
   const setProduct = useCallback(async (product: ARProduct) => {
-    const previousProduct = productRef.current;
-    productRef.current = product;
-
-    const needNewRenderer =
-      !rendererRef.current ||
-      previousProduct?.type !== product.type ||
-      Boolean(previousProduct?.modelUrl) !== Boolean(product.modelUrl);
-
-    if (needNewRenderer) {
-      if (rendererRef.current) {
-        rendererRef.current.dispose();
-        rendererRef.current = null;
-      }
-      
-      if (canvasRef.current) {
-        rendererRef.current = createRenderer(product);
-        rendererRef.current.init(canvasRef.current);
-      } else {
-        console.warn('Canvas not available yet, renderer will be created on start');
-        return;
-      }
+    if (!rendererRef.current && canvasRef.current) {
+      rendererRef.current = new MultiProductRenderer();
+      rendererRef.current.init(canvasRef.current);
     }
 
     if (rendererRef.current) {
@@ -172,6 +160,25 @@ export function useAREngine(config?: Partial<AREngineConfig>): UseAREngineReturn
       }
     }
   }, [updateState]);
+
+  const clearProduct = useCallback((type: ARObjectType) => {
+    if (rendererRef.current) {
+      rendererRef.current.clearProduct(type);
+    }
+  }, []);
+
+  const clearAllProducts = useCallback(() => {
+    if (rendererRef.current) {
+      rendererRef.current.clearAllProducts();
+    }
+  }, []);
+
+  const hasProduct = useCallback((type: ARObjectType): boolean => {
+    if (rendererRef.current) {
+      return rendererRef.current.hasProduct(type);
+    }
+    return false;
+  }, []);
 
   const setSettings = useCallback((newSettings: Partial<ARSettings>) => {
     settingsRef.current = { ...settingsRef.current, ...newSettings };
@@ -198,6 +205,9 @@ export function useAREngine(config?: Partial<AREngineConfig>): UseAREngineReturn
     start,
     stop,
     setProduct,
+    clearProduct,
+    clearAllProducts,
+    hasProduct,
     setSettings,
     landmarks,
   };
